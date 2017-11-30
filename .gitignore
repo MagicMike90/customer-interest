@@ -1,0 +1,9 @@
+.idea
+aclImdb/
+aclImdb_v1.tar.gz
+*.csv
+*.pyc
+*.swp
+.ipynb_checkpoints/
+data/
+result/
