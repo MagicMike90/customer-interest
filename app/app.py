@@ -1,22 +1,39 @@
-from flask import Flask
-from flask import Flask, jsonify
+from flask import Flask, jsonify ,request
+import json
 from sklearn.externals import joblib
 import pandas as pd
-from flask import request
+import numpy as np
+
 
 app = Flask(__name__)
 
+def transform(data):
+  test = pd.read_json(data, orient='records')
+  query = pd.get_dummies(test)
+  for col in model_columns:
+    if col not in query.columns:
+      query[col] = 0
+  return query[model_columns]
+
+def classify(data):
+    label = {0: 'Accpeted', 3: 'Rejected'}
+    X = transform(data)
+    y = clf.predict(X)
+
+    labels = list(map(lambda x: label[x], y))
+    proba = list(map(lambda x: np.max(x), clf.predict_proba(X)))
+    
+    return labels, proba
+  
 @app.route('/predict', methods=['POST'])
 def predict():
-     json_ = request.json
-     print(json_)
-     query_df = pd.DataFrame(json_)
-     query = pd.get_dummies(query_df)
-     for col in model_columns:
-          if col not in query.columns:
-               query[col] = 0
-     prediction = clf.predict(query)
-     return jsonify({'prediction': list(prediction)})
+  try:
+    if request.is_json:
+      data = json.dumps(request.get_json())
+      y, proba = classify(data)
+      return jsonify({'prediction': list(y),'proba': list(proba)})
+  except Exception as inst:
+    return jsonify({'error': inst})
 
 
 if __name__ == '__main__':
