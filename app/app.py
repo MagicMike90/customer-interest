@@ -49,4 +49,3 @@ def predict():
 if __name__ == '__main__':
      clf = joblib.load('models/lrpipeline.pkl')
      model_columns = joblib.load('models/model_columns.pkl')
-     app.run(port=8080)
