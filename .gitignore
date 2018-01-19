@@ -7,3 +7,4 @@ aclImdb_v1.tar.gz
 .ipynb_checkpoints/
 data/
 result/
+app/models/

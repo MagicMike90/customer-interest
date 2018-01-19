@@ -7,49 +7,57 @@ from labelEncoder import MultiColumnLabelEncoder
 
 app = Flask(__name__)
 
-def changeDateType(df): 
-  if 'enquired' in df.columns:
-    df['enquired'] = pd.DatetimeIndex(df['enquired'])
-  df['loan amount'] = df['loan amount'].astype(int)
-  df['post code'] = df['post code'].astype(int)
-  return df
-
-def getDetailDate(df):
-    # remove Year feature since it is not important (show below random forest)
-    # data_set['Year'] = data_set['Enquired'].dt.year
-    if 'enquired' in df.columns:
-      df['month'] = df['enquired'].dt.month
-      df['day'] = df['enquired'].dt.day
-      df['hour'] = df['enquired'].dt.hour
-      df['weekday'] = df['enquired'].dt.weekday_name
-      df = df.loc[:,df.columns != 'enquired']
+def transform_cols(df):
+    df.columns = map(str.lower, df.columns)
+    df.columns = df.columns.str.replace('_', ' ')
     return df
 
-def transform(data):
-  data.columns = map(str.lower, data.columns)
-  data.columns = data.columns.str.replace('_', ' ')
-  changeDateType(data)
-  data = getDetailDate(data)
-  return data
+def cleanFeatures(data) :
+    for col in model_columns: 
+        if col not in data.columns:
+            data[col] = 0
+            
+    for col in model_columns: 
+        if col not in data.columns:
+            data[col] = 0
+    return data
+
+def transform(df): 
+    df = transform_cols(df)
+    df['loan amount'] = df['loan amount'].astype('float')
+    df['enquired'] = pd.DatetimeIndex(df['enquired'])
+    df['year'] = df['enquired'].dt.year
+    df['month'] = df['enquired'].dt.month
+    df['day'] = df['enquired'].dt.day
+    df['hour'] = df['enquired'].dt.hour
+    df['weekday'] = df['enquired'].dt.dayofweek
+    
+    if 'post code' in df.columns: 
+        df['post code'] = df['post code'].astype('int')
+    
+    if 'enquired'in df.columns:
+        df.drop(['enquired'], axis = 1, inplace = True) 
+
+    # encoding categorical features
+    df = pd.get_dummies(df)
+
+    return cleanFeatures(df)
 
 def classify(data):
+    label = {0: 'accept', 1: 'reject'}
     X = transform(data)
-    print(X)
     y = clf.predict(X)[0]
     proba = np.max(clf.predict_proba(X))
-    return y, proba
+    return label[y], proba
   
 @app.route('/predict', methods=['POST'])
 def predict():
   if request.is_json:
     data = pd.DataFrame(request.get_json(),index=[0])
-    data = transform(data)
+
     y, proba = classify(data)
 
-    print(y)
-    print(proba)
-
-    return jsonify({'prediction': 'b','proba': "a"})
+    return jsonify({'prediction': y,'proba': proba})
   # try:
   #   if request.is_json:
   #     # print(request.get_json())
@@ -62,6 +70,6 @@ def predict():
 
 
 if __name__ == '__main__':
-     clf = joblib.load('models/lrpipeline.pkl')
+     clf = joblib.load('models/classifier.pkl')
      model_columns = joblib.load('models/model_columns.pkl')
      app.run(debug=True)
