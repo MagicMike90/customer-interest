@@ -26,7 +26,6 @@ def transform(df):
     df = transform_cols(df)
     df['loan amount'] = df['loan amount'].astype('float')
     df['enquired'] = pd.DatetimeIndex(df['enquired'])
-    df['year'] = df['enquired'].dt.year
     df['month'] = df['enquired'].dt.month
     df['day'] = df['enquired'].dt.day
     df['hour'] = df['enquired'].dt.hour
