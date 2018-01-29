@@ -24,30 +24,31 @@ def cleanFeatures(data) :
 
 def transform(df): 
     df = transform_cols(df)
-    df['loan amount'] = df['loan amount'].astype('float')
-    df['enquired'] = pd.DatetimeIndex(df['enquired'])
-    df['month'] = df['enquired'].dt.month
-    df['day'] = df['enquired'].dt.day
-    df['hour'] = df['enquired'].dt.hour
-    df['weekday'] = df['enquired'].dt.dayofweek
+    
+    if 'loan amount' in df.columns: 
+        df['loan amount'] = df['loan amount'].astype('float')
+        
+    if 'enquired' in df.columns: 
+        df['enquired'] = pd.DatetimeIndex(df['enquired'])
+        df['month'] = df['enquired'].dt.month
+        df['day'] = df['enquired'].dt.day
+        df['hour'] = df['enquired'].dt.hour
+        df['weekday'] = df['enquired'].dt.dayofweek
     
     if 'post code' in df.columns: 
         df['post code'] = df['post code'].astype('int')
     
     if 'enquired'in df.columns:
-        df.drop(['enquired'], axis = 1, inplace = True) 
-
-    # encoding categorical features
-    df = pd.get_dummies(df)
-
-    return cleanFeatures(df)
+        df.drop(['enquired'], axis = 1, inplace = True)
+    
+    return df.replace(encoder)
 
 def classify(data):
-    label = {0: 'accept', 1: 'reject'}
+    # label = {0: 'accept', 1: 'reject'}
     X = transform(data)
     y = clf.predict(X)[0]
     proba = np.max(clf.predict_proba(X))
-    return label[y], proba
+    return y, proba
   
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -71,4 +72,5 @@ def predict():
 if __name__ == '__main__':
      clf = joblib.load('models/classifier.pkl')
      model_columns = joblib.load('models/model_columns.pkl')
+     encoder = joblib.load('models/encoder.pkl')
      app.run(debug=True)
