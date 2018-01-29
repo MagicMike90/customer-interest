@@ -56,17 +56,7 @@ def predict():
     data = pd.DataFrame(request.get_json(),index=[0])
 
     y, proba = classify(data)
-
     return jsonify({'prediction': y,'proba': proba})
-  # try:
-  #   if request.is_json:
-  #     # print(request.get_json())
-  #     data = pd.DataFrame(request.get_json(),index=[0])
-  #     # data = json.dumps(request.get_json())
-  #     y, proba = classify(data)
-  #     return jsonify({'prediction': list(y),'proba': list(proba)})
-  # except Exception as inst:
-  #   return jsonify({'error': inst})
 
 
 if __name__ == '__main__':
